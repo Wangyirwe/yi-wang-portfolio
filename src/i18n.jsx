@@ -17,7 +17,7 @@ const dict = {
     en: 'IDENTITY_LOADING █ PACK_STRUCTURE █ ILLUSTRATION_FLOW █',
   },
   scrollHint: { zh: '向下滚动', en: 'Scroll down' },
-  persona: { zh: '个人界面', en: 'Profile' },
+  persona: { zh: '个人介绍', en: 'Introduction' },
   personaBio1: {
     zh: '专注包装视觉全流程设计，覆盖插画创作、包装封面设计、刀版结构绘制、画册书籍排版、三维建模渲染效果图输出。',
     en: 'Full-process packaging visual design: illustration, pack covers, die-line structure, catalog and book layout, plus 3D modeling and rendering.',
@@ -30,7 +30,7 @@ const dict = {
     zh: '能够独立承接完整项目，从前期创意构思、插画绘制、版式设计、包装刀版输出，到 3D 渲染效果图落地，兼顾视觉表现力、印刷工艺规范与商业市场需求，为产品提供一体化的视觉解决方案。',
     en: 'Independent full-project delivery — from concept, illustration, layout, and die-lines through 3D renders — balancing visual impact, print specs, and commercial needs as one visual solution.',
   },
-  directory: { zh: '项目目录', en: 'Selected Projects' },
+  directory: { zh: '作品集目录', en: 'Portfolio Index' },
   directoryMore: { zh: '查看项目', en: 'Read more' },
   directoryYear: { zh: '年份', en: 'Year' },
   directoryCat: { zh: '类型', en: 'Type' },

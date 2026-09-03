@@ -1,53 +1,134 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
 const featured = works.filter((w) => w.featured)
 
+function poseCard(pose, k, p, n) {
+  const d = k - p
+  const frost = pose.querySelector('.series-frost')
+  if (frost) frost.style.filter = 'none'
+  pose.style.zIndex = String(n - k)
+  pose.style.opacity = '1'
+  if (d < 0) {
+    const t = Math.min(1, -d)
+    pose.style.transform = `translate3d(${(-t * 110).toFixed(2)}%, 0, 0)`
+    pose.style.visibility = t > 0.98 ? 'hidden' : 'visible'
+    pose.style.pointerEvents = t < 0.15 ? 'auto' : 'none'
+    return
+  }
+  const peek = Math.min(d, 4)
+  pose.style.transform = `translate3d(0, ${peek * 14}px, 0) scale(${1 - peek * 0.05})`
+  pose.style.visibility = peek > 3.6 ? 'hidden' : 'visible'
+  pose.style.pointerEvents = d < 0.4 ? 'auto' : 'none'
+}
+
 export default function Featured() {
   const { t, pick } = useLang()
+  const rootRef = useRef(null)
+  const indexRef = useRef(0)
   const [i, setI] = useState(0)
-  const work = featured[i]
+  const n = featured.length
+
+  useEffect(() => {
+    const root = rootRef.current
+    if (!root || n < 2) return
+
+    let raf = 0
+    const read = () => {
+      raf = 0
+      const vh = window.innerHeight || 1
+      const start = root.getBoundingClientRect().top + window.scrollY
+      const y = window.scrollY - start
+      const p = Math.min(n - 1, Math.max(0, y / vh))
+      root.style.setProperty('--series-p', String(p))
+      root.querySelectorAll('.series-pose').forEach((el, k) => poseCard(el, k, p, n))
+      const idx = Math.round(p)
+      if (idx !== indexRef.current) {
+        indexRef.current = idx
+        setI(idx)
+      }
+    }
+
+    const onScroll = () => {
+      if (raf) return
+      raf = requestAnimationFrame(read)
+    }
+
+    read()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [n])
+
+  const go = (idx) => {
+    const root = rootRef.current
+    if (!root) return
+    const next = Math.min(n - 1, Math.max(0, idx))
+    const top = root.getBoundingClientRect().top + window.scrollY + next * window.innerHeight
+    window.scrollTo({ top, behavior: 'smooth' })
+  }
 
   return (
-    <section className="series" id="series">
-      <div className="series-head">
-        <p className="kicker">{t('series')}</p>
-        <div className="pager">
-          <button type="button" onClick={() => setI((n) => (n + featured.length - 1) % featured.length)} aria-label="Prev">
-            ⟪
-          </button>
-          <span>
-            {String(i + 1).padStart(2, '0')} // {String(featured.length).padStart(2, '0')}
-          </span>
-          <button type="button" onClick={() => setI((n) => (n + 1) % featured.length)} aria-label="Next">
-            ⟫
-          </button>
-        </div>
-      </div>
-
-      <Link to={`/work/${work.slug}`} className="series-card">
-        <div className="series-copy">
-          <p className="idx">{work.index} / {pick(work.category)}</p>
-          <h2>{pick(work.title)}</h2>
-          <p>{pick(work.subtitle)}</p>
-          <span className="text-link">{t('view')} →</span>
-        </div>
-        <div className="series-visual">
-          <img src={work.cover} alt={pick(work.title)} />
-        </div>
-      </Link>
-
-      <ol className="series-dots">
-        {featured.map((w, idx) => (
-          <li key={w.slug}>
-            <button type="button" className={idx === i ? 'on' : ''} onClick={() => setI(idx)}>
-              {pick(w.title)}
+    <section
+      className="series"
+      id="series"
+      ref={rootRef}
+      style={{ '--series-n': n, '--series-p': 0 }}
+    >
+      <div className="series-pin">
+        <div className="series-head">
+          <p className="kicker">{t('series')}</p>
+          <div className="pager">
+            <button type="button" onClick={() => go(i - 1)} aria-label="Prev">
+              ⟪
             </button>
-          </li>
-        ))}
-      </ol>
+            <span>
+              {String(i + 1).padStart(2, '0')} // {String(n).padStart(2, '0')}
+            </span>
+            <button type="button" onClick={() => go(i + 1)} aria-label="Next">
+              ⟫
+            </button>
+          </div>
+        </div>
+
+        <div className="series-viewport">
+          <div className="series-stack">
+            {featured.map((work) => (
+              <div className="series-pose" key={work.slug}>
+                <Link to={work.film || `/work/${work.slug}`} className="series-card">
+                  <div className="series-frost">
+                    <p className="idx">{pick(work.category)}</p>
+                    <div className="series-copy">
+                      <h2>{pick(work.title)}</h2>
+                      <p>{pick(work.subtitle)}</p>
+                      <span className="text-link">{t('view')} →</span>
+                    </div>
+                    <div className="series-visual">
+                      <img src={work.cover} alt={pick(work.title)} />
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <ol className="series-dots">
+          {featured.map((w, idx) => (
+            <li key={w.slug}>
+              <button type="button" className={idx === i ? 'on' : ''} onClick={() => go(idx)}>
+                {pick(w.title)}
+              </button>
+            </li>
+          ))}
+        </ol>
+      </div>
     </section>
   )
 }
