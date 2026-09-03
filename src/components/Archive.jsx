@@ -14,9 +14,7 @@ export default function Archive() {
           <Link className="tile" key={w.slug} to={`/work/${w.slug}`}>
             <img src={w.cover} alt={pick(w.title)} />
             <div className="tile-meta">
-              <p>
-                {w.index} / {pick(w.category)}
-              </p>
+              <p>{pick(w.category)}</p>
               <h3>{pick(w.title)}</h3>
             </div>
           </Link>

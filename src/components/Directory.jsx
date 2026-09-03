@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
@@ -10,6 +10,15 @@ export default function Directory() {
   const [i, setI] = useState(0)
   const work = featured[i]
   const href = work.film || `/work/${work.slug}`
+
+  useEffect(() => {
+    featured.forEach((item, index) => {
+      const img = new Image()
+      img.decoding = 'async'
+      if (index === 0) img.fetchPriority = 'high'
+      img.src = item.cover
+    })
+  }, [])
 
   return (
     <section className="directory" id="directory">
@@ -27,7 +36,7 @@ export default function Directory() {
         </ol>
 
         <article className="directory-stage">
-          <img src={work.cover} alt={pick(work.title)} />
+          <img src={work.cover} alt={pick(work.title)} decoding="async" fetchPriority={i === 0 ? 'high' : 'low'} />
           <div className="directory-card">
             <h3>{pick(work.title)}</h3>
             <p>{pick(work.summary)}</p>

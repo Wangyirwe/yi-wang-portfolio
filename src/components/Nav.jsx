@@ -1,11 +1,47 @@
-import { useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../i18n.jsx'
+import { scrollToId } from '../lib/scroll.js'
+
+const NAV_SECTIONS = [
+  { key: 'intro', ids: ['persona'] },
+  { key: 'catalog', ids: ['directory'] },
+  { key: 'works', ids: ['series', 'archive'] },
+  { key: 'about', ids: ['about', 'contact'] },
+]
+
+function sectionInView() {
+  const line = Math.max(96, window.innerHeight * 0.26)
+  let current = ''
+  for (const item of NAV_SECTIONS) {
+    for (const id of item.ids) {
+      const el = document.getElementById(id)
+      if (!el) continue
+      if (el.getBoundingClientRect().top <= line) current = item.key
+    }
+  }
+  return current
+}
 
 export default function Nav() {
   const { lang, toggle } = useLang()
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const home = pathname === '/'
+  const [active, setActive] = useState(home ? '' : 'works')
+  const lockUntil = useRef(0)
+
+  const select = (key) => {
+    lockUntil.current = Date.now() + 1100
+    setActive(key)
+  }
+
+  const go = (key, id) => (e) => {
+    e.preventDefault()
+    select(key)
+    if (home) scrollToId(id)
+    else navigate(`/#${id}`)
+  }
   const introHref = home ? '#persona' : '/#persona'
   const catalogHref = home ? '#directory' : '/#directory'
   const worksHref = home ? '#series' : '/#series'
@@ -51,6 +87,25 @@ export default function Nav() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!home) {
+      setActive('works')
+      return
+    }
+
+    const probe = () => {
+      if (Date.now() < lockUntil.current) return
+      setActive(sectionInView())
+    }
+    probe()
+    window.addEventListener('scroll', probe, { passive: true })
+    window.addEventListener('resize', probe)
+    return () => {
+      window.removeEventListener('scroll', probe)
+      window.removeEventListener('resize', probe)
+    }
+  }, [home])
+
   return (
     <header className="nav" ref={navRef}>
       <div className="nav-glass">
@@ -59,10 +114,10 @@ export default function Nav() {
           className="nav-mark"
           aria-label="Mu Yun"
           onClick={(e) => {
-            if (!home) return
             e.preventDefault()
-            window.scrollTo({ top: 0, behavior: 'smooth' })
-            window.history.replaceState(null, '', '/#top')
+            select('')
+            if (home) scrollToId('top')
+            else navigate('/#top')
           }}
         >
           <span>M</span>
@@ -70,13 +125,21 @@ export default function Nav() {
         </Link>
         <nav className="nav-links">
           {!home && <Link to="/">{lang === 'zh' ? '首页' : 'Home'}</Link>}
-          <a href={introHref}>{lang === 'zh' ? '介绍' : 'Intro'}</a>
-          <a href={catalogHref}>{lang === 'zh' ? '目录' : 'Catalog'}</a>
-          <a href={worksHref}>{lang === 'zh' ? '作品' : 'Works'}</a>
-          <a href={aboutHref}>{lang === 'zh' ? '关于' : 'About'}</a>
+          <a href={introHref} className={active === 'intro' ? 'is-active' : ''} aria-current={active === 'intro' ? 'true' : undefined} onClick={go('intro', 'persona')}>
+            {lang === 'zh' ? '介绍' : 'Intro'}
+          </a>
+          <a href={catalogHref} className={active === 'catalog' ? 'is-active' : ''} aria-current={active === 'catalog' ? 'true' : undefined} onClick={go('catalog', 'directory')}>
+            {lang === 'zh' ? '目录' : 'Catalog'}
+          </a>
+          <a href={worksHref} className={active === 'works' ? 'is-active' : ''} aria-current={active === 'works' ? 'true' : undefined} onClick={go('works', 'series')}>
+            {lang === 'zh' ? '作品' : 'Works'}
+          </a>
+          <a href={aboutHref} className={active === 'about' ? 'is-active' : ''} aria-current={active === 'about' ? 'true' : undefined} onClick={go('about', 'about')}>
+            {lang === 'zh' ? '关于' : 'About'}
+          </a>
         </nav>
         <div className="nav-end">
-          <a href={contactHref} className="nav-cta">
+          <a href={contactHref} className="nav-cta" onClick={go('about', 'contact')}>
             {lang === 'zh' ? '联系' : 'Contact'}
           </a>
           <button type="button" className="lang" onClick={toggle} aria-label="Switch language">

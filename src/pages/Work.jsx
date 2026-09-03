@@ -14,7 +14,7 @@ export default function Work() {
     <article className="work">
       <div className="work-head">
         <p className="kicker">
-          {work.index} / {pick(work.category)} / {work.year}
+          {pick(work.category)} / {work.year}
         </p>
         <Link to="/#archive">{t('back')}</Link>
       </div>

@@ -1,24 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { chips } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
+import { isJumping } from '../lib/scroll.js'
 
 function PersonaCopy({ lang, t, pick, decorative = false }) {
   return (
     <>
       <p className="persona-kicker">{t('persona')}</p>
       <div className="hero-grid">
-        <div className="hero-type">
-          <div className="persona-bio">
-            <p>{t('personaBio1')}</p>
-            <p>{t('personaBio2')}</p>
-            <p>{t('personaBio3')}</p>
-          </div>
-          <ul className="chips">
-            {chips.map((c) => (
-              <li key={c.en}>{pick(c)}</li>
-            ))}
-          </ul>
+        <div className="persona-bio">
+          <p>{t('personaBio1')}</p>
+          <p>{t('personaBio2')}</p>
+          <p>{t('personaBio3')}</p>
         </div>
+        <ul className="chips">
+          {chips.map((c) => (
+            <li key={c.en}>{pick(c)}</li>
+          ))}
+        </ul>
 
         <figure className="hero-photo">
           <img src="/images/portrait.jpg?v=4" alt={decorative ? '' : lang === 'zh' ? '沐匀' : 'Mu Yun'} />
@@ -51,6 +50,7 @@ export default function Hero() {
     video.playsInline = true
 
     const tryPlay = () => {
+      if (isJumping() || document.hidden) return
       const play = video.play()
       if (play) play.catch(() => {})
     }
@@ -73,13 +73,14 @@ export default function Hero() {
 
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting) tryPlay()
+        if (isJumping()) return
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) tryPlay()
         else video.pause()
       },
-      { threshold: 0.12 },
+      { threshold: [0, 0.35, 0.6] },
     )
-    const stage = root.querySelector('.hero-stage')
-    io.observe(stage || root)
+    const intro = root.querySelector('.hero-intro')
+    io.observe(intro || root)
 
     const fine = window.matchMedia('(pointer: fine)').matches
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -131,16 +132,20 @@ export default function Hero() {
 
     let sheenArmed = true
 
-    const playSheen = () => {
+    const runSheen = () => {
       if (reduce) return
       const card = root.querySelector('.persona-glass')
       if (!card) return
-      if (cur.pe > 0.4 && sheenArmed) {
-        sheenArmed = false
-        card.classList.remove('is-sheen')
-        void card.offsetWidth
-        card.classList.add('is-sheen')
-      }
+      sheenArmed = false
+      card.classList.remove('is-sheen')
+      requestAnimationFrame(() => card.classList.add('is-sheen'))
+    }
+
+    const playSheen = () => {
+      if (reduce || isJumping()) return
+      const card = root.querySelector('.persona-glass')
+      if (!card) return
+      if (cur.pe > 0.86 && sheenArmed) runSheen()
       if (cur.pe < 0.16) sheenArmed = true
     }
 
@@ -152,14 +157,14 @@ export default function Hero() {
     }
 
     const tick = () => {
-      readPersona()
+      if (!isJumping()) readPersona()
       const k = reduce ? 1 : 0.12
       const m = reduce ? 1 : 0.055
       cur.x += (target.x - cur.x) * m
       cur.y += (target.y - cur.y) * m
       cur.pe += (target.pe - cur.pe) * k
       cur.px += (target.px - cur.px) * k
-      if (glow.on) {
+      if (glow.on && !isJumping()) {
         const card = root.querySelector('.persona-glass')
         if (card) setGlow(card, glow.cx, glow.cy, true)
       }
@@ -174,6 +179,9 @@ export default function Hero() {
       cur.px = target.px
       apply()
     }
+    window.addEventListener('yw-persona-sheen', runSheen)
+    window.addEventListener('yw-hero-resume', tryPlay)
+
     if (fine && !reduce) {
       window.addEventListener('pointermove', onMove, { passive: true })
       const card = root.querySelector('.persona-glass')
@@ -191,6 +199,8 @@ export default function Hero() {
         video.removeEventListener('canplay', tryPlay)
         document.removeEventListener('visibilitychange', onVisible)
         io.disconnect()
+        window.removeEventListener('yw-persona-sheen', runSheen)
+        window.removeEventListener('yw-hero-resume', tryPlay)
         window.removeEventListener('pointermove', onMove)
         if (card) {
           card.removeEventListener('pointerenter', onGlowMove)
@@ -208,6 +218,8 @@ export default function Hero() {
       video.removeEventListener('canplay', tryPlay)
       document.removeEventListener('visibilitychange', onVisible)
       io.disconnect()
+      window.removeEventListener('yw-persona-sheen', runSheen)
+      window.removeEventListener('yw-hero-resume', tryPlay)
       window.removeEventListener('pointermove', onMove)
       cancelAnimationFrame(raf)
     }
@@ -256,6 +268,26 @@ export default function Hero() {
       </div>
 
       <div className="persona" id="persona">
+        <div className="persona-deck" aria-hidden="true">
+          <div className="persona-ghost persona-ghost--lf">
+            <i /><i /><i /><i />
+          </div>
+          <div className="persona-ghost persona-ghost--lm">
+            <i /><i /><i /><i />
+          </div>
+          <div className="persona-ghost persona-ghost--ln">
+            <i /><i /><i /><i />
+          </div>
+          <div className="persona-ghost persona-ghost--rn">
+            <i /><i /><i /><i />
+          </div>
+          <div className="persona-ghost persona-ghost--rm">
+            <i /><i /><i /><i />
+          </div>
+          <div className="persona-ghost persona-ghost--rf">
+            <i /><i /><i /><i />
+          </div>
+        </div>
         <div className="persona-glass">
           <div className="persona-veil" aria-hidden="true" />
           <div className="persona-sheen" aria-hidden="true">

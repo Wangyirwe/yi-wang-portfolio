@@ -8,6 +8,13 @@
     <meta name="description" content="Yi Wang / 沐匀 — illustration, packaging, and e-commerce graphic design." />
     <script>
       if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+      ;(function () {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]
+        var reload = nav ? nav.type === 'reload' : performance.navigation && performance.navigation.type === 1
+        if (!reload) return
+        if (location.hash) history.replaceState(null, '', location.pathname + location.search)
+        window.scrollTo(0, 0)
+      })()
     </script>
   </head>
   <body>
