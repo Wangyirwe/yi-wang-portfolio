@@ -917,10 +917,55 @@ figcaption {
   align-items: stretch;
 }
 
+@property --mark-y {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 12px;
+}
+
+@property --mark-h {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 52px;
+}
+
+.directory-rail {
+  --mark-y: 12px;
+  --mark-h: 52px;
+  position: relative;
+}
+
 .directory-list {
   list-style: none;
   margin: 0;
   padding: 12px 0 0;
+  overflow: visible;
+}
+
+.directory-rail::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 12px;
+  bottom: 0;
+  width: 2px;
+  background: rgba(232, 226, 214, 0.16);
+  pointer-events: none;
+}
+
+.directory-list-mark {
+  position: absolute;
+  top: var(--mark-y);
+  left: 0;
+  z-index: 1;
+  width: 2px;
+  height: var(--mark-h);
+  border-radius: 2px;
+  background: var(--ink);
+  pointer-events: none;
+  transition:
+    top 0.52s cubic-bezier(0.22, 1, 0.32, 1),
+    height 0.45s cubic-bezier(0.22, 1, 0.32, 1);
 }
 
 .directory-list button {
@@ -929,21 +974,27 @@ figcaption {
   text-align: left;
   background: none;
   border: 0;
-  border-left: 2px solid transparent;
   padding: 16px 8px 16px 18px;
   color: var(--muted);
   cursor: pointer;
+  transition: color 0.35s ease;
 }
 
 .directory-list button.on {
   color: var(--ink);
-  border-left-color: var(--ink);
 }
 
 .directory-list-name {
   display: block;
   font-size: 16px;
   letter-spacing: 0.02em;
+  line-height: 1.3;
+  transform-origin: left center;
+  transition: font-size 0.45s cubic-bezier(0.22, 1, 0.32, 1);
+}
+
+.directory-list button.on .directory-list-name {
+  font-size: 22px;
 }
 
 .directory-list-meta {
@@ -964,7 +1015,8 @@ figcaption {
   margin-right: calc(-48px - 22px);
 }
 
-.directory-stage img {
+.directory-stage img,
+.directory-stage-media {
   position: absolute;
   inset: 0;
   display: block;
@@ -972,6 +1024,29 @@ figcaption {
   height: 100%;
   object-fit: cover;
   filter: brightness(0.68) saturate(0.82);
+}
+
+.directory-stage-media.is-off {
+  visibility: hidden;
+}
+
+.directory-stage-media.is-ken {
+  filter: brightness(0.82) saturate(0.95);
+  transform-origin: 28% 46%;
+  animation: directory-ken 8s ease-in-out infinite alternate;
+}
+
+.directory-stage-media.is-ken.is-off {
+  animation-play-state: paused;
+}
+
+@keyframes directory-ken {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1.32);
+  }
 }
 
 .directory-stage::after {
@@ -1043,38 +1118,6 @@ figcaption {
   text-transform: uppercase;
   color: var(--ink);
   border-bottom: 1px solid rgba(232, 226, 214, 0.45);
-}
-
-.directory-stats {
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  bottom: 22px;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 16px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.directory-stats span {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 11px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(232, 226, 214, 0.7);
-}
-
-.directory-stats strong {
-  display: block;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0.02em;
-  color: #f4f0e8;
-  text-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
 .series,
@@ -1706,10 +1749,6 @@ html.is-jumping .persona-ghost {
   .directory-card {
     width: calc(100% - 28px);
     height: 200px;
-  }
-
-  .directory-stats strong {
-    font-size: 15px;
   }
 
   .hero-photo img {
