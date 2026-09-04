@@ -9,7 +9,7 @@ export default defineConfig({
   },
   server: {
     watch: {
-      ignored: ['**/public/video/**', '**/public/fonts/**'],
+      ignored: ['**/public/fonts/**'],
     },
   },
 })
