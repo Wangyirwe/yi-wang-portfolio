@@ -10,7 +10,7 @@ export default function Archive() {
       <p className="kicker">{t('archive')}</p>
       <h2 className="display">{t('archiveLead')}</h2>
       <div className="archive-grid">
-        {works.map((w) => (
+        {works.filter((w) => w.cover).map((w) => (
           <Link className="tile" key={w.slug} to={`/work/${w.slug}`}>
             <img src={w.cover} alt={pick(w.title)} />
             <div className="tile-meta">

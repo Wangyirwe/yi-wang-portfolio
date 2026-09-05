@@ -57,7 +57,7 @@ export const works = [
     directoryCategory: { zh: '产品包装/刀模设计', en: 'Packaging / Die-cut' },
     subtitle: { zh: '猫粮品牌识别与包装系统', en: 'Cat-food identity and packaging system' },
     cover: '/images/sfy.jpg',
-    stageVideo: '/video/packaging-loop.mp4',
+    stageVideo: '/images/packaging-pingpong.mp4',
     images: ['/images/sfy.jpg'],
     tags: {
       zh: ['品牌识别', '包装结构', 'IP 角色'],
@@ -105,8 +105,11 @@ export const works = [
     year: '2025',
     category: { zh: '包装设计', en: 'Packaging' },
     title: { zh: '纸碗系列', en: 'Paper Bowl Series' },
+    directoryTitle: { zh: '建模系列作品', en: '3D modeling series' },
+    directoryCategory: { zh: '效果图/包装盒', en: 'Renders / Packaging box' },
     subtitle: { zh: '冰淇淋碗与国潮沙拉碗', en: 'Gelato bowl and Guochao salad bowl' },
     cover: '/images/bowls.jpg',
+    stageVideo: '/images/box-orbit-push-loop.mp4?v=4s',
     images: ['/images/bowls.jpg', '/images/guochao-bowl.jpg'],
     tags: {
       zh: ['纸碗', '拼版制版', '插画包装'],
@@ -128,8 +131,11 @@ export const works = [
     year: '2025',
     category: { zh: '平面设计', en: 'Graphic' },
     title: { zh: '电商详情页合集', en: 'E-commerce Detail Pages' },
+    directoryTitle: { zh: '电商系列作品', en: 'E-commerce series' },
+    directoryCategory: { zh: '商品精修/详情页', en: 'Retouching / Detail pages' },
     subtitle: { zh: '主图海报与移动详情长页', en: 'Main images and mobile long-form PDPs' },
     cover: '/images/ecommerce.jpg',
+    stageVideo: '/images/ecommerce-pingpong.mp4',
     images: ['/images/ecommerce.jpg', '/images/ecommerce-detail.jpg', '/images/tea.jpg'],
     tags: {
       zh: ['电商主图', '详情页', '商品摄影排版'],
@@ -142,6 +148,32 @@ export const works = [
     process: {
       zh: ['主图促销层级', '详情模块分镜', '面料与卖点切页'],
       en: ['Promo hierarchy', 'Module storyboard', 'Fabric and benefit cuts'],
+    },
+  },
+  {
+    slug: 'carving-series',
+    featured: true,
+    directoryDetached: true,
+    index: '06',
+    year: '2025',
+    category: { zh: '雕刻', en: 'Carving' },
+    title: { zh: '雕刻系列作品', en: 'Carving series' },
+    directoryTitle: { zh: '雕刻系列作品', en: 'Carving series' },
+    directoryCategory: { zh: '玉石珠宝/古玩艺术品/手工', en: 'Jade jewelry / Antiques / Handmade' },
+    subtitle: { zh: '玉石珠宝与古玩艺术品', en: 'Jade jewelry and antique works' },
+    cover: '',
+    images: [],
+    tags: {
+      zh: ['玉石', '珠宝', '古玩'],
+      en: ['Jade', 'Jewelry', 'Antiques'],
+    },
+    summary: {
+      zh: '玉石珠宝与古玩艺术品的雕刻系列，与上方商业设计条目分开陈列。',
+      en: 'A carving series of jade jewelry and antiques, shown apart from the commercial design entries above.',
+    },
+    process: {
+      zh: ['题材筛选', '雕刻与打磨', '成品质感呈现'],
+      en: ['Subject selection', 'Carve and polish', 'Finish presentation'],
     },
   },
 ]

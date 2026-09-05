@@ -3,24 +3,30 @@ import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
-const featured = works.filter((w) => w.featured)
+const featured = works.filter((w) => w.featured && !w.directoryDetached)
+const HOLD_VH = 0
 
 function poseCard(pose, k, p, n) {
   const d = k - p
-  const frost = pose.querySelector('.series-frost')
-  if (frost) frost.style.filter = 'none'
   pose.style.zIndex = String(n - k)
   pose.style.opacity = '1'
+
   if (d < 0) {
     const t = Math.min(1, -d)
+    pose.style.transformOrigin = '50% 0%'
     pose.style.transform = `translate3d(${(-t * 110).toFixed(2)}%, 0, 0)`
     pose.style.visibility = t > 0.98 ? 'hidden' : 'visible'
-    pose.style.pointerEvents = t < 0.15 ? 'auto' : 'none'
+    pose.style.pointerEvents = 'none'
     return
   }
-  const peek = Math.min(d, 4)
-  pose.style.transform = `translate3d(0, ${peek * 14}px, 0) scale(${1 - peek * 0.05})`
-  pose.style.visibility = peek > 3.6 ? 'hidden' : 'visible'
+
+  const peek = Math.min(d, n - 1)
+  pose.style.transformOrigin = '50% 0%'
+  pose.style.transform =
+    peek === 0
+      ? 'none'
+      : `translate3d(0, ${(-peek * 22).toFixed(1)}px, 0) scale(${(1 - peek * 0.06).toFixed(4)})`
+  pose.style.visibility = 'visible'
   pose.style.pointerEvents = d < 0.4 ? 'auto' : 'none'
 }
 
@@ -41,7 +47,7 @@ export default function Featured() {
       const vh = window.innerHeight || 1
       const start = root.getBoundingClientRect().top + window.scrollY
       const y = window.scrollY - start
-      const p = Math.min(n - 1, Math.max(0, y / vh))
+      const p = Math.min(n - 1, Math.max(0, y / vh - HOLD_VH))
       root.style.setProperty('--series-p', String(p))
       root.querySelectorAll('.series-pose').forEach((el, k) => poseCard(el, k, p, n))
       const idx = Math.round(p)
@@ -70,7 +76,8 @@ export default function Featured() {
     const root = rootRef.current
     if (!root) return
     const next = Math.min(n - 1, Math.max(0, idx))
-    const top = root.getBoundingClientRect().top + window.scrollY + next * window.innerHeight
+    const top =
+      root.getBoundingClientRect().top + window.scrollY + (HOLD_VH + next) * window.innerHeight
     window.scrollTo({ top, behavior: 'smooth' })
   }
 
@@ -79,7 +86,7 @@ export default function Featured() {
       className="series"
       id="series"
       ref={rootRef}
-      style={{ '--series-n': n, '--series-p': 0 }}
+      style={{ '--series-n': n, '--series-hold': HOLD_VH, '--series-p': 0 }}
     >
       <div className="series-pin">
         <div className="series-head">

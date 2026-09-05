@@ -545,7 +545,8 @@ html.is-jumping .persona-sheen {
   visibility: hidden;
 }
 
-html.is-jumping .directory-card {
+html.is-jumping .directory-card,
+html.is-jumping .series-card {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
@@ -933,6 +934,7 @@ figcaption {
   --mark-y: 12px;
   --mark-h: 52px;
   position: relative;
+  overscroll-behavior: contain;
 }
 
 .directory-list {
@@ -963,9 +965,13 @@ figcaption {
   border-radius: 2px;
   background: var(--ink);
   pointer-events: none;
-  transition:
-    top 0.52s cubic-bezier(0.22, 1, 0.32, 1),
-    height 0.45s cubic-bezier(0.22, 1, 0.32, 1);
+  will-change: top, height;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .directory-list-mark {
+    transition: none;
+  }
 }
 
 .directory-list button {
@@ -1003,6 +1009,26 @@ figcaption {
   font-size: 12px;
   letter-spacing: 0.06em;
   color: var(--muted);
+}
+
+.directory-list li.is-detached {
+  padding-top: 52px;
+}
+
+.directory-list li.is-detached .directory-list-name {
+  font-size: 13px;
+}
+
+.directory-list li.is-detached .directory-list-meta {
+  font-size: 11px;
+}
+
+.directory-list li.is-detached button.on .directory-list-name {
+  font-size: 22px;
+}
+
+.directory-list li.is-detached button.on .directory-list-meta {
+  font-size: 12px;
 }
 
 .directory-stage {
@@ -1131,7 +1157,7 @@ figcaption {
 
 .series {
   padding: 0;
-  height: calc(var(--series-n, 1) * 100vh);
+  height: calc((var(--series-n, 1) + var(--series-hold, 0)) * 100vh);
   background: var(--bg);
 }
 
@@ -1142,7 +1168,8 @@ figcaption {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 56px 0 40px;
+  height: 100dvh;
+  padding: 56px 0 max(36px, env(safe-area-inset-bottom));
   overflow: hidden;
   background: var(--bg);
 }
@@ -1152,12 +1179,18 @@ figcaption {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  padding-bottom: 28px;
+  padding-bottom: 12px;
 }
 
 .series-stack {
   position: relative;
   height: 100%;
+}
+
+.series-pose {
+  position: absolute;
+  inset: 88px 40px 0;
+  transform-origin: 50% 0%;
 }
 
 .series-head,
@@ -1170,7 +1203,7 @@ figcaption {
 
 .series-head {
   padding: 0 48px;
-  margin-bottom: 36px;
+  margin-bottom: 20px;
   align-items: baseline;
 }
 
@@ -1195,12 +1228,6 @@ figcaption {
   font-size: 18px;
 }
 
-.series-pose {
-  position: absolute;
-  inset: 0 40px;
-  transform-origin: 50% 0%;
-}
-
 .series-card {
   position: relative;
   display: block;
@@ -1211,11 +1238,38 @@ figcaption {
   padding: 0;
   overflow: hidden;
   border-radius: 24px;
-  background: var(--bg);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(
+      165deg,
+      rgba(255, 255, 255, 0.035) 0%,
+      rgba(8, 7, 6, 0.78) 40%,
+      rgba(4, 4, 4, 0.9) 100%
+    );
+  backdrop-filter: blur(18px) saturate(1.12);
+  -webkit-backdrop-filter: blur(18px) saturate(1.12);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.series-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: inherit;
+  opacity: 0.28;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='sg'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23sg)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
 }
 
 .series-frost {
+  position: relative;
+  z-index: 1;
   display: grid;
   grid-template-columns: 1fr 0.72fr;
   grid-template-rows: auto auto;
@@ -1223,7 +1277,7 @@ figcaption {
   row-gap: 8px;
   align-items: start;
   height: 100%;
-  padding: 22px 28px 22px 32px;
+  padding: 52px 28px 22px 32px;
 }
 
 .series-frost > .idx {
@@ -1291,8 +1345,8 @@ figcaption {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 0 48px;
-  margin: 20px 0 0;
+  padding: 0 48px 8px;
+  margin: 12px 0 0;
   flex: none;
 }
 
@@ -1700,11 +1754,11 @@ html.is-jumping .persona-ghost {
   }
 
   .series-pose {
-    inset: 0 16px;
+    inset: 72px 16px 0;
   }
 
   .series-frost {
-    padding: 16px 18px;
+    padding: 40px 18px 16px;
     gap: 18px;
     grid-template-columns: 1fr;
     grid-template-rows: none;

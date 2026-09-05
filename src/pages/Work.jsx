@@ -20,6 +20,7 @@ export default function Work() {
       </div>
       <h1>{pick(work.title)}</h1>
       <p className="lead">{pick(work.subtitle)}</p>
+      {work.cover ? (
       <figure className="work-cover">
         <img src={work.cover} alt={pick(work.title)} />
         {work.film && (
@@ -28,6 +29,7 @@ export default function Work() {
           </Link>
         )}
       </figure>
+      ) : null}
       <p className="lead">{pick(work.summary)}</p>
       <p className="kicker">{t('process')}</p>
       <ul className="process">
@@ -35,11 +37,13 @@ export default function Work() {
           <li key={step}>{step}</li>
         ))}
       </ul>
+      {work.images?.length ? (
       <div className="gallery">
         {work.images.map((src) => (
           <img key={src} src={src} alt="" />
         ))}
       </div>
+      ) : null}
       <div className="work-nav">
         <Link to="/#archive">{t('back')}</Link>
         <Link to={`/work/${next.slug}`}>
