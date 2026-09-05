@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
-const featured = works.filter((w) => w.featured)
-const stageVideos = featured.filter((w) => w.stageVideo)
-const stageStills = featured.filter((w) => !w.stageVideo)
+const allFeatured = () => works.filter((w) => w.featured)
 
 export default function Directory() {
   const { t, pick, lang } = useLang()
@@ -13,6 +11,10 @@ export default function Directory() {
   const listRef = useRef(null)
   const videoEls = useRef({})
   const videoTimes = useRef({})
+  const lastWheelNav = useRef(0)
+  const featured = allFeatured()
+  const stageVideos = featured.filter((w) => w.stageVideo)
+  const stageStills = featured.filter((w) => !w.stageVideo)
   const work = featured[i]
   const href = work.film || `/work/${work.slug}`
 
@@ -49,6 +51,19 @@ export default function Directory() {
     if (!active) return
     seekSaved(active, work.slug)
     active.muted = true
+    active.loop = true
+    const rate = work.stagePlaybackRate || 1
+    active.playbackRate = rate
+    if (active.error || active.readyState < 1) {
+      active.load()
+      seekSaved(active, work.slug)
+    }
+    active.playbackRate = rate
+    const applyRate = () => {
+      active.playbackRate = rate
+    }
+    active.addEventListener('loadeddata', applyRate)
+    active.addEventListener('playing', applyRate)
     const play = active.play()
     if (play && typeof play.catch === 'function') play.catch(() => {})
 
@@ -59,33 +74,95 @@ export default function Directory() {
     return () => {
       videoTimes.current[work.slug] = active.currentTime
       active.removeEventListener('timeupdate', onTime)
+      active.removeEventListener('loadeddata', applyRate)
+      active.removeEventListener('playing', applyRate)
       active.pause()
     }
   }, [i, work.slug])
 
-  useLayoutEffect(() => {
-    const list = listRef.current
-    if (!list) return
+  useEffect(() => {
+    const rail = listRef.current
+    if (!rail) return
+    const onWheel = (event) => {
+      if (Math.abs(event.deltaY) < Math.abs(event.deltaX)) return
+      const dir = event.deltaY > 0 ? 1 : event.deltaY < 0 ? -1 : 0
+      if (!dir) return
 
-    const syncMark = () => {
-      const btn = list.querySelector('button.on')
-      const mark = list.querySelector('.directory-list-mark')
-      if (!btn || !mark) return
-      mark.removeAttribute('style')
-      const lr = list.getBoundingClientRect()
-      const br = btn.getBoundingClientRect()
-      list.style.setProperty('--mark-y', `${br.top - lr.top}px`)
-      list.style.setProperty('--mark-h', `${br.height}px`)
+      event.preventDefault()
+      const now = performance.now()
+      if (now - lastWheelNav.current < 340) return
+      lastWheelNav.current = now
+      setI((cur) => {
+        const last = works.filter((w) => w.featured).length - 1
+        return Math.min(last, Math.max(0, cur + dir))
+      })
     }
 
-    syncMark()
-    const ro = new ResizeObserver(syncMark)
-    ro.observe(list)
-    list.querySelectorAll('button').forEach((btn) => ro.observe(btn))
-    window.addEventListener('resize', syncMark)
+    if (rail._dirWheel) rail.removeEventListener('wheel', rail._dirWheel)
+    rail._dirWheel = onWheel
+    rail.addEventListener('wheel', onWheel, { passive: false })
     return () => {
-      ro.disconnect()
-      window.removeEventListener('resize', syncMark)
+      rail.removeEventListener('wheel', onWheel)
+      if (rail._dirWheel === onWheel) delete rail._dirWheel
+    }
+  }, [featured.length])
+
+  const markCrawl = useRef(0)
+
+  useLayoutEffect(() => {
+    const rail = listRef.current
+    if (!rail) return
+
+    const measure = () => {
+      const btn = rail.querySelector('button.on')
+      if (!btn) return null
+      const rr = rail.getBoundingClientRect()
+      const br = btn.getBoundingClientRect()
+      return { y: br.top - rr.top, h: br.height }
+    }
+
+    const apply = (y, h) => {
+      rail.style.setProperty('--mark-y', `${y}px`)
+      rail.style.setProperty('--mark-h', `${h}px`)
+    }
+
+    const place = (motion) => {
+      const mark = rail.querySelector('.directory-list-mark')
+      const next = measure()
+      if (!mark || !next) return
+
+      window.clearTimeout(markCrawl.current)
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      const prevY = mark.offsetTop
+      const prevH = mark.offsetHeight
+      const still = !motion || reduce || !prevH || Math.abs(next.y - prevY) < 1
+
+      if (still) {
+        mark.style.transition = 'none'
+        apply(next.y, next.h)
+        return
+      }
+
+      const down = next.y > prevY
+      const stretchY = down ? prevY : next.y
+      const stretchH = down ? next.y + next.h - prevY : prevY + prevH - next.y
+      const ease = 'cubic-bezier(0.22, 0.8, 0.28, 1)'
+
+      mark.style.transition = `top 0.34s ${ease}, height 0.34s ${ease}`
+      apply(stretchY, stretchH)
+
+      markCrawl.current = window.setTimeout(() => {
+        mark.style.transition = `top 0.42s ${ease}, height 0.42s ${ease}`
+        apply(next.y, next.h)
+      }, 200)
+    }
+
+    place(true)
+    const snap = () => place(false)
+    window.addEventListener('resize', snap)
+    return () => {
+      window.clearTimeout(markCrawl.current)
+      window.removeEventListener('resize', snap)
     }
   }, [i, lang])
 
@@ -97,9 +174,13 @@ export default function Directory() {
           <span className="directory-list-mark" aria-hidden="true" />
           <ol className="directory-list">
             {featured.map((w, idx) => (
-              <li key={w.slug}>
+              <li key={w.slug} className={w.directoryDetached ? 'is-detached' : undefined}>
                 <button type="button" className={idx === i ? 'on' : ''} onClick={() => setI(idx)}>
-                  <span className="directory-list-name">{pick(w.directoryTitle ?? w.title)}</span>
+                  <span className="directory-list-name">
+                    {w.directoryDetached
+                      ? `${pick({ zh: '其他', en: 'Other' })} ${pick(w.directoryTitle ?? w.title)}`
+                      : `${idx + 1} ${pick(w.directoryTitle ?? w.title)}`}
+                  </span>
                   <span className="directory-list-meta">{pick(w.directoryCategory ?? w.category)}</span>
                 </button>
               </li>
@@ -110,21 +191,26 @@ export default function Directory() {
         <article className="directory-stage">
           {stageVideos.map((item) => (
             <video
-              key={item.slug}
+              key={`${item.slug}-${item.stageVideo}`}
               ref={(el) => {
-                if (el) videoEls.current[item.slug] = el
-                else delete videoEls.current[item.slug]
+                if (el) {
+                  videoEls.current[item.slug] = el
+                  el.playbackRate = item.stagePlaybackRate || 1
+                } else delete videoEls.current[item.slug]
               }}
               className={`directory-stage-media${item.slug === work.slug ? '' : ' is-off'}`}
               src={item.stageVideo}
-              poster={item.cover}
               muted
               loop
               playsInline
               preload="auto"
+              onPlaying={(event) => {
+                event.currentTarget.playbackRate = item.stagePlaybackRate || 1
+              }}
             />
           ))}
-          {stageStills.map((item) => (
+          {stageStills.map((item) =>
+            item.stageImage || item.cover ? (
             <img
               key={item.slug}
               className={`directory-stage-media${item.stageKenBurns ? ' is-ken' : ''}${item.slug === work.slug ? '' : ' is-off'}`}
@@ -132,7 +218,8 @@ export default function Directory() {
               alt={item.slug === work.slug ? pick(item.title) : ''}
               decoding="async"
             />
-          ))}
+            ) : null,
+          )}
           <div className="directory-card">
             <h3>{pick(work.title)}</h3>
             <p>{pick(work.summary)}</p>
