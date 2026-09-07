@@ -3,7 +3,7 @@ let jumpTimer = 0
 let jumpRaf = 0
 
 export function isJumping() {
-  return jumping
+  return jumping === true
 }
 
 function endJump() {
@@ -12,6 +12,7 @@ function endJump() {
   window.cancelAnimationFrame(jumpRaf)
   window.clearTimeout(jumpTimer)
   window.removeEventListener('scrollend', endJump)
+  window.dispatchEvent(new Event('yw-jump-end'))
 }
 
 function pausePageMedia() {

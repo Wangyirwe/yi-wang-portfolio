@@ -2,6 +2,25 @@ import { useEffect, useRef, useState } from 'react'
 import { chips } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 import { isJumping } from '../lib/scroll.js'
+import ParticleText from './ParticleText.jsx'
+
+const HERO_PARTICLES = {
+  particleSize: 1.8,
+  density: 6,
+  color: '#ece8df',
+  highlightColor: '#d4ccc0',
+  scatter: 80,
+  gatherDuration: 1400,
+  stagger: 280,
+  pointerRepel: 28,
+  repelRadius: 90,
+  idleDrift: 0.25,
+  trigger: 'mount',
+  fontSize: '1em',
+  fontWeight: 700,
+  fontFamily: 'inherit',
+  glow: false,
+}
 
 function PersonaCopy({ lang, t, pick, decorative = false }) {
   return (
@@ -254,10 +273,9 @@ export default function Hero() {
         </div>
 
         <div className="hero-theme">
-          <p className="hero-theme-title">
-            <span className="line">DESIGN</span>
-            <span className="line">STUDIO</span>
-          </p>
+          <h1 className="hero-theme-title">
+            <ParticleText text={'DESIGN\nSTUDIO'} {...HERO_PARTICLES} />
+          </h1>
           <div className="hero-mouse">
             <span className="hero-mouse-body" aria-hidden="true">
               <span className="hero-mouse-wheel" />
