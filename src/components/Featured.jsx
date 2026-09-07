@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
+import { isJumping } from '../lib/scroll.js'
 
 const featured = works.filter((w) => w.featured && !w.directoryDetached)
 const HOLD_VH = 0
@@ -44,6 +45,7 @@ export default function Featured() {
     let raf = 0
     const read = () => {
       raf = 0
+      if (isJumping()) return
       const vh = window.innerHeight || 1
       const start = root.getBoundingClientRect().top + window.scrollY
       const y = window.scrollY - start
@@ -65,9 +67,11 @@ export default function Featured() {
     read()
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onScroll)
+    window.addEventListener('yw-jump-end', onScroll)
     return () => {
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onScroll)
+      window.removeEventListener('yw-jump-end', onScroll)
       if (raf) cancelAnimationFrame(raf)
     }
   }, [n])
