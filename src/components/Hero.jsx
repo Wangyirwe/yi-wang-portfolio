@@ -2,25 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { chips } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 import { isJumping } from '../lib/scroll.js'
-import ParticleText from './ParticleText.jsx'
-
-const HERO_PARTICLES = {
-  particleSize: 1.8,
-  density: 6,
-  color: '#ece8df',
-  highlightColor: '#d4ccc0',
-  scatter: 80,
-  gatherDuration: 1400,
-  stagger: 280,
-  pointerRepel: 28,
-  repelRadius: 90,
-  idleDrift: 0.25,
-  trigger: 'mount',
-  fontSize: '1em',
-  fontWeight: 700,
-  fontFamily: 'inherit',
-  glow: false,
-}
+import SylvaHero from './SylvaHero.jsx'
 
 function PersonaCopy({ lang, t, pick, decorative = false }) {
   return (
@@ -56,53 +38,44 @@ function PersonaCopy({ lang, t, pick, decorative = false }) {
 export default function Hero() {
   const { lang, t, pick } = useLang()
   const rootRef = useRef(null)
-  const videoRef = useRef(null)
-  const [ready, setReady] = useState(false)
+  const [cueOn, setCueOn] = useState(false)
 
   useEffect(() => {
-    const video = videoRef.current
+    document.documentElement.classList.add('is-over-sylva')
+    return () => document.documentElement.classList.remove('is-over-sylva')
+  }, [])
+
+  useEffect(() => {
+    let shown = false
+    const sync = () => {
+      const atTop = window.scrollY < 48
+      setCueOn(shown && atTop)
+    }
+    const onSylva = (event) => {
+      if (event.data?.type !== 'yw-sylva-scene' && event.data?.type !== 'yw-sylva-quiet') return
+      shown = true
+      sync()
+    }
+    const fallback = window.setTimeout(() => {
+      shown = true
+      sync()
+    }, 2400)
+    window.addEventListener('message', onSylva)
+    window.addEventListener('scroll', sync, { passive: true })
+    sync()
+    return () => {
+      window.clearTimeout(fallback)
+      window.removeEventListener('message', onSylva)
+      window.removeEventListener('scroll', sync)
+    }
+  }, [])
+
+  useEffect(() => {
     const root = rootRef.current
-    if (!video || !root) return
+    if (!root) return
 
-    video.muted = true
-    video.defaultMuted = true
-    video.playsInline = true
-
-    const tryPlay = () => {
-      if (isJumping() || document.hidden) return
-      const play = video.play()
-      if (play) play.catch(() => {})
-    }
-
-    const onReady = () => {
-      setReady(true)
-      tryPlay()
-    }
-
-    video.addEventListener('loadeddata', onReady)
-    video.addEventListener('canplay', tryPlay)
-    if (video.readyState >= 2) onReady()
-    tryPlay()
-
-    const onVisible = () => {
-      if (document.hidden) video.pause()
-      else tryPlay()
-    }
-    document.addEventListener('visibilitychange', onVisible)
-
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (isJumping()) return
-        if (entry.isIntersecting && entry.intersectionRatio >= 0.35) tryPlay()
-        else video.pause()
-      },
-      { threshold: [0, 0.35, 0.6] },
-    )
-    const intro = root.querySelector('.hero-intro')
-    io.observe(intro || root)
-
-    const fine = window.matchMedia('(pointer: fine)').matches
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const fine = window.matchMedia('(pointer: fine)').matches
     let raf = 0
     const target = { x: 0, y: 0, pe: 0, px: 0 }
     const cur = { x: 0, y: 0, pe: 0, px: 0 }
@@ -131,8 +104,7 @@ export default function Hero() {
         card.classList.remove('is-text-glow')
         return
       }
-      const layer = card.querySelector('.persona-copy--glow')
-      const rect = (layer || card).getBoundingClientRect()
+      const rect = (card.querySelector('.persona-copy--glow') || card).getBoundingClientRect()
       card.style.setProperty('--glow-x', `${(clientX - rect.left).toFixed(1)}px`)
       card.style.setProperty('--glow-y', `${(clientY - rect.top).toFixed(1)}px`)
       card.style.setProperty('--glow-vx', `${clientX.toFixed(1)}px`)
@@ -141,16 +113,13 @@ export default function Hero() {
     }
 
     const onMove = (e) => {
-      const x = (e.clientX / window.innerWidth) * 2 - 1
-      const y = (e.clientY / window.innerHeight) * 2 - 1
-      target.x = x
-      target.y = y
+      target.x = (e.clientX / window.innerWidth) * 2 - 1
+      target.y = (e.clientY / window.innerHeight) * 2 - 1
       const card = root.querySelector('.persona-glass')
       if (card && glow.on) setGlow(card, e.clientX, e.clientY, true)
     }
 
     let sheenArmed = true
-
     const runSheen = () => {
       if (reduce) return
       const card = root.querySelector('.persona-glass')
@@ -160,14 +129,6 @@ export default function Hero() {
       requestAnimationFrame(() => card.classList.add('is-sheen'))
     }
 
-    const playSheen = () => {
-      if (reduce || isJumping()) return
-      const card = root.querySelector('.persona-glass')
-      if (!card) return
-      if (cur.pe > 0.86 && sheenArmed) runSheen()
-      if (cur.pe < 0.16) sheenArmed = true
-    }
-
     const apply = () => {
       root.style.setProperty('--mx', cur.x.toFixed(4))
       root.style.setProperty('--my', cur.y.toFixed(4))
@@ -175,8 +136,17 @@ export default function Hero() {
       root.style.setProperty('--px', cur.px.toFixed(3))
     }
 
+    let holdScan = true
+    const onSylva = (event) => {
+      if (event.data?.type === 'yw-sylva-quiet') holdScan = false
+    }
+    window.addEventListener('message', onSylva)
+
     const tick = () => {
+      raf = requestAnimationFrame(tick)
+      if (holdScan && window.scrollY < 80) return
       if (!isJumping()) readPersona()
+      if (window.scrollY < 40 && cur.pe < 0.04 && target.pe < 0.04) return
       const k = reduce ? 1 : 0.12
       const m = reduce ? 1 : 0.055
       cur.x += (target.x - cur.x) * m
@@ -187,23 +157,19 @@ export default function Hero() {
         const card = root.querySelector('.persona-glass')
         if (card) setGlow(card, glow.cx, glow.cy, true)
       }
-      playSheen()
+      if (!reduce && !isJumping()) {
+        if (cur.pe > 0.86 && sheenArmed) runSheen()
+        if (cur.pe < 0.16) sheenArmed = true
+      }
       apply()
-      raf = requestAnimationFrame(tick)
     }
 
     readPersona()
-    if (reduce) {
-      cur.pe = target.pe
-      cur.px = target.px
-      apply()
-    }
     window.addEventListener('yw-persona-sheen', runSheen)
-    window.addEventListener('yw-hero-resume', tryPlay)
 
+    const card = root.querySelector('.persona-glass')
     if (fine && !reduce) {
       window.addEventListener('pointermove', onMove, { passive: true })
-      const card = root.querySelector('.persona-glass')
       const onGlowMove = (e) => setGlow(card, e.clientX, e.clientY, true)
       const onGlowLeave = () => setGlow(card, 0, 0, false)
       if (card) {
@@ -212,14 +178,9 @@ export default function Hero() {
         card.addEventListener('pointerleave', onGlowLeave)
       }
       raf = requestAnimationFrame(tick)
-
       return () => {
-        video.removeEventListener('loadeddata', onReady)
-        video.removeEventListener('canplay', tryPlay)
-        document.removeEventListener('visibilitychange', onVisible)
-        io.disconnect()
+        window.removeEventListener('message', onSylva)
         window.removeEventListener('yw-persona-sheen', runSheen)
-        window.removeEventListener('yw-hero-resume', tryPlay)
         window.removeEventListener('pointermove', onMove)
         if (card) {
           card.removeEventListener('pointerenter', onGlowMove)
@@ -231,57 +192,23 @@ export default function Hero() {
     }
 
     raf = requestAnimationFrame(tick)
-
     return () => {
-      video.removeEventListener('loadeddata', onReady)
-      video.removeEventListener('canplay', tryPlay)
-      document.removeEventListener('visibilitychange', onVisible)
-      io.disconnect()
+      window.removeEventListener('message', onSylva)
       window.removeEventListener('yw-persona-sheen', runSheen)
-      window.removeEventListener('yw-hero-resume', tryPlay)
       window.removeEventListener('pointermove', onMove)
       cancelAnimationFrame(raf)
     }
   }, [])
 
   return (
-    <section className={`hero is-film ${ready ? 'is-ready' : ''}`} id="top" ref={rootRef}>
-      <div className="hero-stage" aria-hidden="true">
-        <div className="hero-video-frame">
-          <video
-            ref={videoRef}
-            className="hero-video"
-            src="/video/hero-clean.mp4"
-            poster="/images/time-snack/three-quarter.jpg"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-          />
-          <div className="hero-wm-hide" />
-        </div>
-        <div className="hero-dim" />
-        <div className="hero-grain" />
-        <div className="hero-vignette" />
-      </div>
-
-      <div className="hero-intro">
-        <div className="hero-meta">
-          <p className="kicker">{t('heroKicker')}</p>
-          <p className="status">{t('status')}</p>
-        </div>
-
-        <div className="hero-theme">
-          <h1 className="hero-theme-title">
-            <ParticleText text={'DESIGN\nSTUDIO'} {...HERO_PARTICLES} />
-          </h1>
-          <div className="hero-mouse">
-            <span className="hero-mouse-body" aria-hidden="true">
-              <span className="hero-mouse-wheel" />
-            </span>
-            <span className="hero-mouse-label">{t('scrollHint')}</span>
-          </div>
+    <section className="hero is-sylva" id="top" ref={rootRef}>
+      <div className="sylva-frame">
+        <SylvaHero />
+        <div className={`hero-mouse sylva-scroll${cueOn ? ' is-on' : ''}`} aria-hidden="true">
+          <span className="hero-mouse-body">
+            <span className="hero-mouse-wheel" />
+          </span>
+          <span className="hero-mouse-label">{t('scrollHint')}</span>
         </div>
       </div>
 

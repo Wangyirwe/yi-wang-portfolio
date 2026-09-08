@@ -19,12 +19,12 @@ export default function Directory() {
   const href = work.film || `/work/${work.slug}`
 
   useEffect(() => {
-    featured.forEach((item, index) => {
-      const img = new Image()
-      img.decoding = 'async'
-      if (index === 0) img.fetchPriority = 'high'
-      img.src = item.cover
-    })
+    const first = featured[0]
+    if (!first?.cover) return
+    const img = new Image()
+    img.decoding = 'async'
+    img.fetchPriority = 'low'
+    img.src = first.cover
   }, [])
 
   useEffect(() => {
@@ -203,7 +203,7 @@ export default function Directory() {
               muted
               loop
               playsInline
-              preload="auto"
+              preload={item.slug === work.slug ? 'metadata' : 'none'}
               onPlaying={(event) => {
                 event.currentTarget.playbackRate = item.stagePlaybackRate || 1
               }}
