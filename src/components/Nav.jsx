@@ -231,6 +231,27 @@ export default function Nav() {
     }
   }, [home])
 
+  useEffect(() => {
+    if (!home) {
+      document.documentElement.classList.remove('is-over-sylva')
+      return
+    }
+    const frame = document.querySelector('.sylva-frame')
+    if (!frame) return
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        const over = entry.isIntersecting && entry.intersectionRatio >= 0.48
+        document.documentElement.classList.toggle('is-over-sylva', over)
+      },
+      { threshold: [0.2, 0.48, 0.7] },
+    )
+    io.observe(frame)
+    return () => {
+      io.disconnect()
+      document.documentElement.classList.remove('is-over-sylva')
+    }
+  }, [home])
+
   return (
     <header className="nav" ref={navRef}>
       <div className="nav-glass">
