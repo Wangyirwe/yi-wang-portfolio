@@ -1,27 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { scrollToId } from '../lib/scroll.js'
+import { isJumping, scrollToId } from '../lib/scroll.js'
 
 const ITEMS = [
-  { key: 'mark', id: 'top', label: 'Home', mark: true },
-  { key: 'grove', id: 'top', label: 'Grove' },
-  { key: 'habitats', id: 'directory', label: 'Habitats' },
-  { key: 'journal', id: 'series', label: 'Journal' },
-  { key: 'enter', id: 'contact', label: 'Enter', enter: true },
+  { key: 'mark', id: 'top', label: '首页', mark: true },
+  { key: 'grove', id: 'persona', label: '介绍' },
+  { key: 'habitats', id: 'directory', label: '目录' },
+  { key: 'journal', id: 'series', label: '作品' },
+  { key: 'enter', id: 'contact', label: '联系', enter: true },
 ]
 
 function sectionKey() {
-  const line = Math.max(96, window.innerHeight * 0.28)
+  const vh = window.innerHeight
+  const line = Math.max(96, vh * 0.32)
+  const card = document.querySelector('.persona-glass')
+  const groveEl = card || document.getElementById('persona')
+  let current = 'mark'
+  if (groveEl) {
+    const rect = groveEl.getBoundingClientRect()
+    const vis = Math.min(rect.bottom, vh) - Math.max(rect.top, 0)
+    const shown = vis / Math.max(1, Math.min(rect.height, vh))
+    if (shown >= 0.48 || rect.top <= vh * 0.58) current = 'grove'
+  }
   const hits = [
-    ['grove', 'top'],
-    ['grove', 'persona'],
     ['habitats', 'directory'],
     ['journal', 'series'],
     ['journal', 'archive'],
     ['enter', 'about'],
     ['enter', 'contact'],
   ]
-  let current = 'grove'
   for (const [key, id] of hits) {
     const el = document.getElementById(id)
     if (!el) continue
@@ -35,11 +42,11 @@ export default function SylvaDock() {
   const navigate = useNavigate()
   const home = pathname === '/'
   const rootRef = useRef(null)
-  const [active, setActive] = useState(home ? 'grove' : 'journal')
+  const [active, setActive] = useState(home ? 'mark' : 'journal')
 
   const go = (key, id) => (event) => {
     event.preventDefault()
-    setActive(key === 'mark' ? 'grove' : key)
+    setActive(key)
     if (home) scrollToId(id)
     else navigate(`/#${id}`)
   }
@@ -49,22 +56,37 @@ export default function SylvaDock() {
       setActive('journal')
       return
     }
-    const probe = () => setActive(sectionKey())
+    const probe = () => {
+      if (isJumping() || document.documentElement.classList.contains('is-jumping')) return
+      setActive(sectionKey())
+    }
     probe()
     window.addEventListener('scroll', probe, { passive: true })
     window.addEventListener('resize', probe)
+    window.addEventListener('yw-jump-end', probe)
     return () => {
       window.removeEventListener('scroll', probe)
       window.removeEventListener('resize', probe)
+      window.removeEventListener('yw-jump-end', probe)
     }
   }, [home])
 
   useEffect(() => {
     const root = rootRef.current
     if (!root) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const items = [...root.querySelectorAll('[data-dock]')]
     const states = items.map(() => ({ v: 0, vel: 0, target: 0, cx: 0 }))
+    const specs = [root, ...items].map((el) => ({
+      el,
+      ang: 2.4,
+      tAng: 2.4,
+      br: 0,
+      tBr: 0,
+      reach: el === root ? 250 : 168,
+    }))
     let aimX = 0
+    let aimY = 0
     let hovering = false
     let running = false
     let raf = 0
@@ -84,11 +106,30 @@ export default function SylvaDock() {
         states.forEach((s) => {
           s.target = 0
         })
+        specs.forEach((s) => {
+          s.tBr = 0
+        })
         return
       }
       states.forEach((s) => {
         const prox = clamp01(1 - Math.abs(aimX - s.cx) / 96)
         s.target = prox * prox * (3 - 2 * prox)
+      })
+      specs.forEach((st) => {
+        const r = st.el.getBoundingClientRect()
+        const cx = r.left + r.width * 0.5
+        const cy = r.top + r.height * 0.5
+        const dx = Math.max(r.left - aimX, 0, aimX - r.right)
+        const dy = Math.max(r.top - aimY, 0, aimY - r.bottom)
+        const d = Math.hypot(dx, dy)
+        st.tAng =
+          d === 0
+            ? Math.atan2(2 / Math.max(r.height, 1), -2 / Math.max(r.width, 1)) +
+              ((aimX - cx) / Math.max(r.width * 0.5, 1)) * 0.3 +
+              ((cy - aimY) / Math.max(r.height * 0.5, 1)) * 0.15
+            : Math.atan2(cy - aimY, aimX - cx)
+        const raw = clamp01(1 - d / st.reach)
+        st.tBr = raw * raw * (3 - 2 * raw)
       })
     }
 
@@ -106,6 +147,16 @@ export default function SylvaDock() {
         el.dataset.near = hovering && v > 0.18 ? 'true' : 'false'
         el.style.transform = `translate3d(0, ${(v * 5).toFixed(2)}px, 0) scale(${(1 + v * 0.1).toFixed(4)})`
       })
+      if (!reduced) {
+        specs.forEach((st) => {
+          const diff = ((st.tAng - st.ang + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+          st.ang += diff * (1 - Math.exp(-dt * 8))
+          st.br += (st.tBr - st.br) * (1 - Math.exp(-dt * 9))
+          if (Math.abs(diff) > 0.001 || Math.abs(st.tBr - st.br) > 0.002) moving = true
+          st.el.style.setProperty('--spec-angle', `${st.ang.toFixed(4)}rad`)
+          st.el.style.setProperty('--spec-bright', (clamp01(st.br) * 0.96).toFixed(3))
+        })
+      }
       if (moving || hovering) {
         raf = requestAnimationFrame(tick)
         return
@@ -114,6 +165,9 @@ export default function SylvaDock() {
       items.forEach((el) => {
         el.dataset.near = 'false'
         el.style.transform = ''
+      })
+      specs.forEach((st) => {
+        st.el.style.setProperty('--spec-bright', '0')
       })
     }
 
@@ -141,7 +195,9 @@ export default function SylvaDock() {
     }
 
     const onMove = (e) => {
+      if (e.pointerType === 'touch') return
       aimX = e.clientX
+      aimY = e.clientY
       if (!hovering) return
       setTargets()
       start()
@@ -162,27 +218,24 @@ export default function SylvaDock() {
 
   return (
     <div className="site-dock-wrap">
-      <nav className="site-dock" ref={rootRef} data-spec aria-label="Primary">
+      <nav className="site-dock" ref={rootRef} data-spec aria-label="主导航">
         {ITEMS.map((item) => (
           <a
             key={item.key}
-            className={`dock-item${item.mark ? ' dock-mark' : ''}${item.enter ? ' dock-item--enter' : ''}${!item.mark && active === item.key ? ' is-active' : ''}`}
+            className={`dock-item${item.mark ? ' dock-mark' : ''}${active === item.key ? ' is-active' : ''}`}
             data-dock
             data-spec
             href={home ? `#${item.id}` : `/#${item.id}`}
-            aria-label={item.mark ? 'Home' : item.label}
+            aria-label={item.label}
             onClick={go(item.key, item.id)}
           >
             {item.mark ? (
-              <svg viewBox="0 0 22 24" aria-hidden="true">
-                <path d="M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z" />
-                <path d="M9.6 12.55h2.8v4.2c1.35.3 2.45 1.15 3.15 2.4-1.35.4-2.4.15-3.15-.4v4.15H9.6v-4.15c-.75.55-1.8.8-3.15.4.7-1.25 1.8-2.1 3.15-2.4v-4.2Z" />
-              </svg>
+              <span className="dock-mark-icon" aria-hidden="true" />
             ) : (
               <>
                 <span className="glyph" aria-hidden="true">
                   {item.key === 'grove' && (
-                    <svg viewBox="0 0 16 16"><path d="M8 14V9" /><path d="M8 9c0-2.4 1.7-4.3 4-4.3.2 2.6-1.6 4.6-4 4.3Z" /><path d="M8 10.5C7.9 8.4 6.4 6.8 4.4 6.8 4.3 8.9 5.9 10.6 8 10.5Z" /></svg>
+                    <svg viewBox="0 0 16 16"><path d="M5.6 2.6c.28.4.28.85 0 1.25"/><path d="M8 2.2c.28.4.28.85 0 1.25"/><path d="M10.4 2.6c.28.4.28.85 0 1.25"/><path d="M3.8 7.2h7.6v5.2a1.9 1.9 0 0 1-1.9 1.9H5.7A1.9 1.9 0 0 1 3.8 12.4z"/><path d="M11.4 8.4c1.55 0 2.35 1.05 2.35 2.25s-.8 2.25-2.35 2.25"/></svg>
                   )}
                   {item.key === 'habitats' && (
                     <svg viewBox="0 0 16 16"><path d="M1.6 12.4c2.4-3.4 4.3-5.1 5.7-5.1 2 0 3 3.6 5 3.6 1.1 0 1.9-.5 2.4-1.4" /><path d="M4.3 6.2C5.5 4.4 6.6 3.5 7.6 3.5c1.5 0 2.2 2.4 3.7 2.4" /></svg>
@@ -191,7 +244,7 @@ export default function SylvaDock() {
                     <svg viewBox="0 0 16 16"><path d="M4 2.4h5.3L12 5.1v8.5H4z" /><path d="M9.2 2.4V5h2.7" /><path d="M6 8.4h4M6 10.8h2.8" /></svg>
                   )}
                   {item.key === 'enter' && (
-                    <svg viewBox="0 0 16 16"><path d="M6.6 2.5h5.1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6.6" /><path d="M2.6 8h6.6" /><path d="m7 5.6 2.4 2.4L7 10.4" /></svg>
+                    <svg viewBox="0 0 16 16"><path d="M2.5 4.3h11v7.4a.9.9 0 0 1-.9.9H3.4a.9.9 0 0 1-.9-.9z" /><path d="M2.5 4.3 8 8.5l5.5-4.2" /></svg>
                   )}
                 </span>
                 <span>{item.label}</span>

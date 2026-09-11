@@ -1,6 +1,19 @@
-import { Link } from 'react-router-dom'
 import { archiveExtras, works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
+
+function Tile({ cover, title, category }) {
+  return (
+    <article className="tile">
+      <div className="tile-meta">
+        <p>{category}</p>
+        <h3>{title}</h3>
+      </div>
+      <div className="tile-shot">
+        <img src={cover} alt={title} />
+      </div>
+    </article>
+  )
+}
 
 export default function Archive() {
   const { t, pick } = useLang()
@@ -10,23 +23,21 @@ export default function Archive() {
       <p className="kicker">{t('archive')}</p>
       <h2 className="display">{t('archiveLead')}</h2>
       <div className="archive-grid">
-        {works.filter((w) => w.cover).map((w) => (
-          <Link className="tile" key={w.slug} to={`/work/${w.slug}`}>
-            <img src={w.cover} alt={pick(w.title)} />
-            <div className="tile-meta">
-              <p>{pick(w.category)}</p>
-              <h3>{pick(w.title)}</h3>
-            </div>
-          </Link>
+        {works.filter((w) => w.cover && !w.directoryDetached).map((w) => (
+          <Tile
+            key={w.slug}
+            cover={w.cover}
+            title={pick(w.title)}
+            category={pick(w.category)}
+          />
         ))}
         {archiveExtras.map((item) => (
-          <article className="tile" key={item.id}>
-            <img src={item.cover} alt={pick(item.title)} />
-            <div className="tile-meta">
-              <p>{pick(item.category)}</p>
-              <h3>{pick(item.title)}</h3>
-            </div>
-          </article>
+          <Tile
+            key={item.id}
+            cover={item.cover}
+            title={pick(item.title)}
+            category={pick(item.category)}
+          />
         ))}
       </div>
     </section>

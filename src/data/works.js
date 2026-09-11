@@ -15,8 +15,6 @@ export const works = [
     directoryCategory: { zh: '插画/板绘', en: 'Illustration / Tablet' },
     subtitle: { zh: '8 秒 4K 进场：推进、环绕开抽、升空展示', en: '8s 4K entrance: dolly, orbit drawer, ascension' },
     cover: '/images/time-snack/three-quarter.jpg',
-    stageImage: '/images/lighthouse.jpg',
-    stageKenBurns: true,
     images: [
       '/images/time-snack/three-quarter.jpg',
       '/images/time-snack/open-drawer.jpg',
@@ -57,7 +55,6 @@ export const works = [
     directoryCategory: { zh: '产品包装/刀模设计', en: 'Packaging / Die-cut' },
     subtitle: { zh: '猫粮品牌识别与包装系统', en: 'Cat-food identity and packaging system' },
     cover: '/images/sfy.jpg',
-    stageVideo: '/images/packaging-pingpong.mp4',
     images: ['/images/sfy.jpg'],
     tags: {
       zh: ['品牌识别', '包装结构', 'IP 角色'],
@@ -83,7 +80,6 @@ export const works = [
     directoryCategory: { zh: '海报/平面设计', en: 'Poster / Graphic' },
     subtitle: { zh: '新国潮插画', en: 'New Guochao illustration' },
     cover: '/images/guochao.jpg',
-    stageVideo: '/images/poster-loop.mp4',
     images: ['/images/guochao.jpg', '/images/snow-lake.jpg'],
     tags: {
       zh: ['新国潮', '插画', '金色纹理'],
@@ -109,7 +105,6 @@ export const works = [
     directoryCategory: { zh: '效果图/包装盒', en: 'Renders / Packaging box' },
     subtitle: { zh: '冰淇淋碗与国潮沙拉碗', en: 'Gelato bowl and Guochao salad bowl' },
     cover: '/images/bowls.jpg',
-    stageVideo: '/images/box-orbit-push-loop.mp4?v=4s',
     images: ['/images/bowls.jpg', '/images/guochao-bowl.jpg'],
     tags: {
       zh: ['纸碗', '拼版制版', '插画包装'],
@@ -135,7 +130,6 @@ export const works = [
     directoryCategory: { zh: '商品精修/详情页', en: 'Retouching / Detail pages' },
     subtitle: { zh: '主图海报与移动详情长页', en: 'Main images and mobile long-form PDPs' },
     cover: '/images/ecommerce.jpg',
-    stageVideo: '/images/ecommerce-pingpong.mp4',
     images: ['/images/ecommerce.jpg', '/images/ecommerce-detail.jpg', '/images/tea.jpg'],
     tags: {
       zh: ['电商主图', '详情页', '商品摄影排版'],
@@ -161,8 +155,8 @@ export const works = [
     directoryTitle: { zh: '雕刻系列作品', en: 'Carving series' },
     directoryCategory: { zh: '玉石珠宝/古玩艺术品/手工', en: 'Jade jewelry / Antiques / Handmade' },
     subtitle: { zh: '玉石珠宝与古玩艺术品', en: 'Jade jewelry and antique works' },
-    cover: '',
-    images: [],
+    cover: '/images/snow-lake.jpg',
+    images: ['/images/snow-lake.jpg'],
     tags: {
       zh: ['玉石', '珠宝', '古玩'],
       en: ['Jade', 'Jewelry', 'Antiques'],

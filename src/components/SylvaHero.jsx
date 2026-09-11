@@ -9,7 +9,7 @@ const TITLE_STYLE = `
 
 function goParent(id) {
   if (id === 'film') {
-    window.location.assign('/film/time-snack-inn')
+    scrollToId('series')
     return
   }
   scrollToId(id)

@@ -16,7 +16,7 @@ const dict = {
     zh: '品牌识别载入中 █ 包装结构推演中 █ 插画能量持续输出中 █',
     en: 'IDENTITY_LOADING █ PACK_STRUCTURE █ ILLUSTRATION_FLOW █',
   },
-  scrollHint: { zh: '向下滚动', en: 'Scroll down' },
+  scrollHint: { zh: '向下滑动', en: 'Swipe down' },
   persona: { zh: '个人介绍', en: 'Introduction' },
   personaBio1: {
     zh: '专注包装视觉全流程设计，覆盖插画创作、包装封面设计、刀版结构绘制、画册书籍排版、三维建模渲染效果图输出。',
@@ -32,7 +32,7 @@ const dict = {
   },
   directory: { zh: '作品集目录', en: 'Portfolio Index' },
   directoryMore: { zh: '查看项目', en: 'Read more' },
-  series: { zh: '精选系列', en: 'SELECTED SERIES' },
+  series: { zh: '插画作品', en: 'ILLUSTRATION WORKS' },
   who: { zh: '关于', en: 'WHO I AM' },
   whoTitle: { zh: '（ 把图形落到可生产的点上 ）', en: '( From image to a producible core )' },
   whoBody: {
