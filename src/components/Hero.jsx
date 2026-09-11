@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { chips } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
-import { isJumping } from '../lib/scroll.js'
+import { isJumping, personaViewProgress } from '../lib/scroll.js'
 import SylvaHero from './SylvaHero.jsx'
 
 function PersonaCopy({ lang, t, pick, decorative = false }) {
@@ -77,20 +77,41 @@ export default function Hero() {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     const fine = window.matchMedia('(pointer: fine)').matches
     let raf = 0
-    const target = { x: 0, y: 0, pe: 0, px: 0 }
-    const cur = { x: 0, y: 0, pe: 0, px: 0 }
+    const target = { x: 0, y: 0, pe: 0, px: 0, pv: 0, pk: 1, pky: 40 }
+    const cur = { x: 0, y: 0, pe: 0, px: 0, pv: 0, pk: 1, pky: 40 }
 
     const clamp = (n, a, b) => Math.min(b, Math.max(a, n))
     const range = (v, a, b) => clamp((v - a) / (b - a), 0, 1)
+
+    const readReveal = () => personaViewProgress()
+
+    const readKicker = (card, rect, vh) => {
+      if (reduce) {
+        target.pk = 0
+        target.pky = 0
+        return
+      }
+      const visTop = Math.max(rect.top, 0)
+      const visBot = Math.min(rect.bottom, vh)
+      const visH = Math.max(0, visBot - visTop)
+      const fullH = Math.max(1, Math.min(rect.height, vh))
+      target.pk = window.scrollY < 24 ? 1 : 1 - range(visH / fullH, 0.28, 0.97)
+      const copy = card.querySelector('.persona-copy:not(.persona-copy--glow)')
+      const cr = (copy || card).getBoundingClientRect()
+      target.pky = (visTop + visBot) / 2 - cr.top + 10
+    }
 
     const readPersona = () => {
       const card = root.querySelector('.persona-glass')
       if (!card) return
       const rect = card.getBoundingClientRect()
       const vh = window.innerHeight
-      target.pe = range(rect.top, vh * 0.78, vh * 0.16)
+      const view = readReveal()
+      target.pe = view
+      target.pv = view
       target.px = 1 - range(rect.bottom, vh * 0.14, vh * 0.58)
-      card.style.pointerEvents = cur.px > 0.72 ? 'none' : 'auto'
+      readKicker(card, rect, vh)
+      card.style.pointerEvents = cur.px > 0.72 || cur.pv < 0.45 ? 'none' : 'auto'
     }
 
     const glow = { on: false, cx: 0, cy: 0 }
@@ -134,6 +155,14 @@ export default function Hero() {
       root.style.setProperty('--my', cur.y.toFixed(4))
       root.style.setProperty('--pe', cur.pe.toFixed(3))
       root.style.setProperty('--px', cur.px.toFixed(3))
+      root.style.setProperty('--pv', cur.pv.toFixed(3))
+      root.style.setProperty('--pk', cur.pk.toFixed(3))
+      root.style.setProperty('--pky', `${cur.pky.toFixed(1)}px`)
+      const glass = root.querySelector('.persona-glass')
+      if (glass) {
+        const g = glass.getBoundingClientRect()
+        root.style.setProperty('--cue-x', `${(g.left + g.width / 2).toFixed(1)}px`)
+      }
     }
 
     let holdScan = true
@@ -144,27 +173,55 @@ export default function Hero() {
 
     const tick = () => {
       raf = requestAnimationFrame(tick)
-      if (holdScan && window.scrollY < 80) return
-      if (!isJumping()) readPersona()
-      if (window.scrollY < 40 && cur.pe < 0.04 && target.pe < 0.04) return
+      if (isJumping()) {
+        const view = readReveal()
+        target.pe = view
+        target.pv = view
+        const card = root.querySelector('.persona-glass')
+        if (card) {
+          const rect = card.getBoundingClientRect()
+          readKicker(card, rect, window.innerHeight)
+        }
+      } else {
+        readPersona()
+      }
+      const snapKicker = holdScan && window.scrollY < 80
+      if (snapKicker) {
+        cur.pk = target.pk
+        cur.pky = target.pky
+        apply()
+        return
+      }
+      if (window.scrollY < 40 && cur.pe < 0.04 && target.pe < 0.04) {
+        cur.pk += (target.pk - cur.pk) * (reduce ? 1 : 0.22)
+        cur.pky += (target.pky - cur.pky) * (reduce ? 1 : 0.22)
+        apply()
+        return
+      }
       const k = reduce ? 1 : 0.12
       const m = reduce ? 1 : 0.055
       cur.x += (target.x - cur.x) * m
       cur.y += (target.y - cur.y) * m
-      cur.pe += (target.pe - cur.pe) * k
+      cur.pe += (target.pe - cur.pe) * (reduce ? 1 : 0.22)
       cur.px += (target.px - cur.px) * k
+      cur.pv += (target.pv - cur.pv) * (reduce ? 1 : 0.22)
+      cur.pk += (target.pk - cur.pk) * (reduce ? 1 : 0.22)
+      cur.pky += (target.pky - cur.pky) * (reduce ? 1 : 0.22)
       if (glow.on && !isJumping()) {
         const card = root.querySelector('.persona-glass')
         if (card) setGlow(card, glow.cx, glow.cy, true)
       }
       if (!reduce && !isJumping()) {
-        if (cur.pe > 0.86 && sheenArmed) runSheen()
-        if (cur.pe < 0.16) sheenArmed = true
+        if (cur.pv > 0.96 && sheenArmed) runSheen()
+        if (cur.pv < 0.22) sheenArmed = true
       }
       apply()
     }
 
     readPersona()
+    cur.pk = target.pk
+    cur.pky = target.pky
+    apply()
     window.addEventListener('yw-persona-sheen', runSheen)
 
     const card = root.querySelector('.persona-glass')
@@ -238,11 +295,13 @@ export default function Hero() {
           <div className="persona-sheen" aria-hidden="true">
             <span className="persona-sheen-bar" />
           </div>
-          <div className="persona-copy">
-            <PersonaCopy lang={lang} t={t} pick={pick} />
-          </div>
-          <div className="persona-copy persona-copy--glow" aria-hidden="true" inert>
-            <PersonaCopy lang={lang} t={t} pick={pick} decorative />
+          <div className="persona-copy-stack">
+            <div className="persona-copy">
+              <PersonaCopy lang={lang} t={t} pick={pick} />
+            </div>
+            <div className="persona-copy persona-copy--glow" aria-hidden="true" inert>
+              <PersonaCopy lang={lang} t={t} pick={pick} decorative />
+            </div>
           </div>
         </div>
       </div>
