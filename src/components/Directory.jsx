@@ -13,7 +13,7 @@ export default function Directory() {
   const indexRef = useRef(0)
   const featured = allFeatured()
   const work = featured[i]
-  const href = work.film || `/work/${work.slug}`
+  const href = `/work/${work.slug}`
   indexRef.current = i
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Route, Routes, useLocation } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Cursor from './components/Cursor.jsx'
 import SylvaDock from './components/SylvaDock.jsx'
 import { useLang } from './i18n.jsx'
@@ -41,7 +41,8 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/work/:slug" element={<Work />} />
-        <Route path="/film/time-snack-inn" element={<Film />} />
+        <Route path="/film/:slug" element={<Film />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {!cinema ? (
         <footer className="site-footer">
