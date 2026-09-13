@@ -4,6 +4,8 @@ import Cursor from './components/Cursor.jsx'
 import SylvaDock from './components/SylvaDock.jsx'
 import { useLang } from './i18n.jsx'
 import Home from './pages/Home.jsx'
+import Work from './pages/Work.jsx'
+import Film from './pages/Film.jsx'
 
 export default function App() {
   const { t } = useLang()
@@ -32,6 +34,8 @@ export default function App() {
       {heroReady ? <SylvaDock /> : null}
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/work/:slug" element={<Work />} />
+        <Route path="/film/:slug" element={<Film />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <footer className="site-footer">
