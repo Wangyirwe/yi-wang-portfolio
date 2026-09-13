@@ -8,6 +8,7 @@ export default defineConfig({
     dedupe: ['three'],
   },
   server: {
+    host: true,
     watch: {
       ignored: ['**/public/video/**', '**/public/fonts/**'],
     },
