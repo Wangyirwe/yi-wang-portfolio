@@ -1647,7 +1647,13 @@ figcaption {
 }
 
 a.tile {
+  position: relative;
+  z-index: 2;
   cursor: pointer;
+}
+
+article.tile {
+  cursor: default;
 }
 
 .tile-shot {
