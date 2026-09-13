@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
@@ -121,11 +122,11 @@ export default function Directory() {
         </div>
 
         <article className="directory-stage">
-          <div className="directory-shot">
+          <Link className="directory-shot" to={`/work/${work.slug}`}>
             {work.cover ? (
               <img src={work.cover} alt={pick(work.title)} />
             ) : null}
-          </div>
+          </Link>
         </article>
       </div>
     </section>
