@@ -4,8 +4,8 @@
   "terminals": [
     {
       "name": "dev",
-      "command": "npm run dev",
-      "description": "Vite dev server for the portfolio site (http://localhost:5173)."
+      "command": "npm run dev -- --host",
+      "description": "Vite dev server for the portfolio site, bound to all interfaces so the Cursor preview panel can reach it (http://localhost:5173)."
     }
   ],
   "ports": [
