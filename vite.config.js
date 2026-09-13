@@ -8,7 +8,8 @@ export default defineConfig({
     dedupe: ['three'],
   },
   server: {
-    host: true,
+    host: '0.0.0.0',
+    port: 43177,
     strictPort: true,
     allowedHosts: true,
     watch: {
