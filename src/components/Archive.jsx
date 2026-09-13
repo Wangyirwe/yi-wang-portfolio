@@ -3,7 +3,7 @@ import { archiveExtras, works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
 function Tile({ cover, title, category, to }) {
-  const inner = (
+  const content = (
     <>
       <div className="tile-meta">
         <p>{category}</p>
@@ -17,11 +17,11 @@ function Tile({ cover, title, category, to }) {
   if (to) {
     return (
       <Link className="tile" to={to}>
-        {inner}
+        {content}
       </Link>
     )
   }
-  return <article className="tile">{inner}</article>
+  return <article className="tile">{content}</article>
 }
 
 export default function Archive() {

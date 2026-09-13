@@ -129,7 +129,7 @@ export default function Featured() {
               const name = pick(work.title)
               return (
                 <div className="series-pose" key={work.slug}>
-                  <Link to={work.film || `/work/${work.slug}`} className="series-card">
+                  <Link className="series-card" to={`/work/${work.slug}`}>
                     <div className="series-frost">
                       <div className="series-card-head">
                         <span className="series-no">{String(idx + 1).padStart(2, '0')}</span>
