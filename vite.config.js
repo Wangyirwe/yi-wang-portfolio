@@ -9,6 +9,8 @@ export default defineConfig({
   },
   server: {
     host: true,
+    strictPort: true,
+    allowedHosts: true,
     watch: {
       ignored: ['**/public/video/**', '**/public/fonts/**'],
     },
