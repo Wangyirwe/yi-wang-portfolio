@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
@@ -12,6 +13,7 @@ export default function Directory() {
   const indexRef = useRef(0)
   const featured = allFeatured()
   const work = featured[i]
+  const href = work.film || `/work/${work.slug}`
   indexRef.current = i
 
   useEffect(() => {
@@ -121,11 +123,14 @@ export default function Directory() {
         </div>
 
         <article className="directory-stage">
-          <div className="directory-shot">
+          <Link className="directory-shot" to={href}>
             {work.cover ? (
               <img src={work.cover} alt={pick(work.title)} />
             ) : null}
-          </div>
+          </Link>
+          <Link className="directory-more" to={href}>
+            {t('directoryMore')}
+          </Link>
         </article>
       </div>
     </section>
