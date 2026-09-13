@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 import { isJumping } from '../lib/scroll.js'
@@ -128,7 +129,7 @@ export default function Featured() {
               const name = pick(work.title)
               return (
                 <div className="series-pose" key={work.slug}>
-                  <div className="series-card">
+                  <Link className="series-card" to={`/work/${work.slug}`}>
                     <div className="series-frost">
                       <div className="series-card-head">
                         <span className="series-no">{String(idx + 1).padStart(2, '0')}</span>
@@ -150,7 +151,7 @@ export default function Featured() {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 </div>
               )
             })}
