@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Yi Wang · Designer</title>
+    <meta name="description" content="Yi Wang / 沐匀 — illustration, packaging, and e-commerce graphic design." />
+    <script>
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual'
+      ;(function () {
+        var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0]
+        var reload = nav ? nav.type === 'reload' : performance.navigation && performance.navigation.type === 1
+        if (!reload) return
+        if (location.hash) history.replaceState(null, '', location.pathname + location.search)
+        window.scrollTo(0, 0)
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
