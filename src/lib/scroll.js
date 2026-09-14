@@ -25,13 +25,16 @@ export function personaViewProgress() {
 
 export function personaAnchorY() {
   const vh = window.innerHeight
+  const persona = document.getElementById('persona')
+  const card = document.querySelector('.persona-glass')
+  if (persona && card) {
+    const cardTop = persona.offsetTop + card.offsetTop
+    const cardH = card.offsetHeight
+    return Math.max(0, Math.round(cardTop - (vh - cardH) / 2))
+  }
   const dir = document.getElementById('directory')
   if (dir) {
     return Math.max(0, Math.round(dir.getBoundingClientRect().top + window.scrollY - vh * 0.9))
-  }
-  const card = document.querySelector('.persona-glass')
-  if (card) {
-    return Math.max(0, Math.round(card.getBoundingClientRect().top + window.scrollY - vh * 0.24))
   }
   const el = document.getElementById('persona')
   if (!el) return window.scrollY

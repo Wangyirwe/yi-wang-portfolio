@@ -3,7 +3,6 @@ import { scrollToId } from '../lib/scroll.js'
 
 const TITLE_STYLE = `
   .headline { display: none !important; }
-  html, body, canvas, a, button, svg, * { cursor: none !important; }
   .dock-wrap { display: none !important; }
 `
 
@@ -19,7 +18,6 @@ function targetId(node) {
   if (!node || !node.closest) return ''
   if (node.closest('[data-yw-go]')) return node.closest('[data-yw-go]').getAttribute('data-yw-go')
   if (node.closest('.liquid-stage--explore, .liquid-button--explore')) return 'series'
-  if (node.closest('.liquid-stage--play, .liquid-button--play')) return 'film'
   if (node.closest('.scroll')) return 'persona'
   if (node.closest('.knob--about')) return 'about'
   if (node.closest('.card--stove .knob, .card--stove')) return 'series'
@@ -50,19 +48,10 @@ export default function SylvaHero() {
       style.textContent = TITLE_STYLE
       doc.head.appendChild(style)
     }
-    doc.documentElement.style.setProperty('cursor', 'none', 'important')
-    doc.body?.style.setProperty('cursor', 'none', 'important')
-    const hideNativeCursor = () => {
-      doc.querySelectorAll('canvas').forEach((node) => {
-        node.style.setProperty('cursor', 'none', 'important')
-      })
-    }
-    hideNativeCursor()
-    win.addEventListener('pointermove', hideNativeCursor, { passive: true })
 
     const lede = doc.querySelector('.lede')
     if (lede) {
-      lede.textContent = '我们通过耐心的设计、本土种植和更深入的管理方式，恢复荒野之地。'
+      lede.textContent = ''
     }
     const explore = doc.querySelector('.liquid-button--explore .lbl')
     if (explore) explore.textContent = '探索作品'
@@ -92,7 +81,6 @@ export default function SylvaHero() {
     const dockIds = ['top', 'top', 'directory', 'series', 'contact']
     items.forEach((item, i) => item.setAttribute('data-yw-go', dockIds[i] || 'top'))
     doc.querySelector('.liquid-stage--explore')?.setAttribute('data-yw-go', 'series')
-    doc.querySelector('.liquid-stage--play')?.setAttribute('data-yw-go', 'film')
     doc.querySelector('.scroll')?.setAttribute('data-yw-go', 'persona')
     doc.querySelector('.knob--about')?.setAttribute('data-yw-go', 'about')
     doc.querySelector('.card--stove .knob')?.setAttribute('data-yw-go', 'series')

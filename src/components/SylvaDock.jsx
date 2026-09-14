@@ -216,8 +216,14 @@ export default function SylvaDock() {
     }
   }, [])
 
+  const [dockedIn, setDockedIn] = useState(false)
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setDockedIn(true))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
   return (
-    <div className="site-dock-wrap">
+    <div className={`site-dock-wrap${dockedIn ? ' is-dock-in' : ''}`}>
       <nav className="site-dock" ref={rootRef} data-spec aria-label="主导航">
         {ITEMS.map((item) => (
           <a

@@ -1,10 +1,9 @@
-import { Link } from 'react-router-dom'
 import { archiveExtras, works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
-function Tile({ cover, title, category, to }) {
-  const content = (
-    <>
+function Tile({ cover, title, category }) {
+  return (
+    <article className="tile">
       <div className="tile-meta">
         <p>{category}</p>
         <h3>{title}</h3>
@@ -12,16 +11,8 @@ function Tile({ cover, title, category, to }) {
       <div className="tile-shot">
         <img src={cover} alt={title} />
       </div>
-    </>
+    </article>
   )
-  if (to) {
-    return (
-      <Link className="tile" to={to}>
-        {content}
-      </Link>
-    )
-  }
-  return <article className="tile">{content}</article>
 }
 
 export default function Archive() {
@@ -29,7 +20,6 @@ export default function Archive() {
 
   return (
     <section className="archive" id="archive">
-      <p className="kicker">{t('archive')}</p>
       <h2 className="display">{t('archiveLead')}</h2>
       <div className="archive-grid">
         {works.filter((w) => w.cover && !w.directoryDetached).map((w) => (
@@ -38,7 +28,6 @@ export default function Archive() {
             cover={w.cover}
             title={pick(w.title)}
             category={pick(w.category)}
-            to={`/work/${w.slug}`}
           />
         ))}
         {archiveExtras.map((item) => (

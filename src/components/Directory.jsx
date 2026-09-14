@@ -1,5 +1,4 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { works } from '../data/works.js'
 import { useLang } from '../i18n.jsx'
 
@@ -12,8 +11,6 @@ export default function Directory() {
   const lastWheelNav = useRef(0)
   const indexRef = useRef(0)
   const featured = allFeatured()
-  const work = featured[i]
-  const href = `/work/${work.slug}`
   indexRef.current = i
 
   useEffect(() => {
@@ -50,9 +47,7 @@ export default function Directory() {
     const measure = () => {
       const btn = rail.querySelector('button.on')
       if (!btn) return null
-      const rr = rail.getBoundingClientRect()
-      const br = btn.getBoundingClientRect()
-      return { y: br.top - rr.top, h: br.height }
+      return { y: btn.offsetTop, h: btn.offsetHeight }
     }
 
     const apply = (y, h) => {
@@ -92,6 +87,11 @@ export default function Directory() {
     }
 
     place(true)
+    const btn = rail.querySelector('button.on')
+    if (btn) {
+      const target = btn.offsetTop - (rail.clientHeight - btn.offsetHeight) / 2
+      rail.scrollTo({ top: Math.max(0, target), behavior: 'auto' })
+    }
     const snap = () => place(false)
     window.addEventListener('resize', snap)
     return () => {
@@ -105,8 +105,8 @@ export default function Directory() {
       <h2 className="directory-title">{t('directory')}</h2>
       <div className="directory-layout">
         <div className="directory-rail" ref={listRef}>
-          <span className="directory-list-mark" aria-hidden="true" />
           <ol className="directory-list">
+            <span className="directory-list-mark" aria-hidden="true" />
             {featured.map((w, idx) => (
               <li key={w.slug} className={w.directoryDetached ? 'is-detached' : undefined}>
                 <button type="button" className={idx === i ? 'on' : ''} onClick={() => setI(idx)}>
@@ -123,14 +123,39 @@ export default function Directory() {
         </div>
 
         <article className="directory-stage">
-          <Link className="directory-shot" to={href}>
-            {work.cover ? (
-              <img src={work.cover} alt={pick(work.title)} />
-            ) : null}
-          </Link>
-          <Link className="directory-more" to={href}>
-            {t('directoryMore')}
-          </Link>
+          {featured.map((w, idx) => {
+            const depth = i - idx // 0 = active, 1 = first behind, 2 = second...
+            const isBehind = depth > 0
+            const isAhead = idx > i
+
+            // Fan deck: offset + slight rotation + shrink + darken
+            const fanX = isBehind ? -16 * depth : 0
+            const fanY = isBehind ? 8 * depth : 0
+            const rot = isBehind ? -4 * depth : 0 // slight fan tilt
+            const scale = isBehind ? Math.max(0.55, 1 - 0.08 * depth) : 1
+            // Bright-to-dark per layer
+            const opacity = isBehind ? Math.max(0.18, 1 - 0.2 * depth) : isAhead ? 0 : 1
+            const z = isBehind ? 100 - depth : idx === i ? 200 : 0
+
+            const style = {
+              transform: `translate3d(${fanX}px, ${fanY}px, 0) rotate(${rot}deg) scale(${scale.toFixed(3)})`,
+              opacity: opacity.toFixed(2),
+              zIndex: z,
+              pointerEvents: depth === 0 ? 'auto' : 'none',
+              transformOrigin: 'left center',
+            }
+
+            return (
+              <div
+                key={w.slug}
+                className={`directory-shot${depth === 0 ? ' is-active' : ''}`}
+                data-idx={idx}
+                style={style}
+              >
+                {w.cover ? <img src={w.cover} alt={pick(w.title)} /> : null}
+              </div>
+            )
+          })}
         </article>
       </div>
     </section>

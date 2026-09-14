@@ -115,6 +115,7 @@ export default function Hero() {
     }
 
     const glow = { on: false, cx: 0, cy: 0 }
+    let tiltActive = false
 
     const setGlow = (card, clientX, clientY, on) => {
       glow.on = on
@@ -134,8 +135,8 @@ export default function Hero() {
     }
 
     const onMove = (e) => {
-      target.x = (e.clientX / window.innerWidth) * 2 - 1
-      target.y = (e.clientY / window.innerHeight) * 2 - 1
+      // Only update mouse pos for card tilt while clicking (tiltActive handles that)
+      // onMove still tracks glow on hover
       const card = root.querySelector('.persona-glass')
       if (card && glow.on) setGlow(card, e.clientX, e.clientY, true)
     }
@@ -158,6 +159,7 @@ export default function Hero() {
       root.style.setProperty('--pv', cur.pv.toFixed(3))
       root.style.setProperty('--pk', cur.pk.toFixed(3))
       root.style.setProperty('--pky', `${cur.pky.toFixed(1)}px`)
+      root.style.setProperty('--tilt', (tiltActive && cur.px < 0.5 ? 1 : 0).toFixed(3))
       const glass = root.querySelector('.persona-glass')
       if (glass) {
         const g = glass.getBoundingClientRect()
@@ -225,6 +227,49 @@ export default function Hero() {
     window.addEventListener('yw-persona-sheen', runSheen)
 
     const card = root.querySelector('.persona-glass')
+
+    // Click-activated 3D tilt: press to tilt toward cursor, release to snap back
+    const onTiltDown = (e) => {
+      if (!card) return
+      tiltActive = true
+      card.classList.add('is-parallax')
+      const r = card.getBoundingClientRect()
+      const cx = e.clientX - (r.left + r.width / 2)
+      const cy = e.clientY - (r.top + r.height / 2)
+      card.style.setProperty('--parx', (cx / (r.width / 2)).toFixed(4))
+      card.style.setProperty('--pary', (cy / (r.height / 2)).toFixed(4))
+      // Also drive the card-level tilt via --mx/--my
+      target.x = (e.clientX / window.innerWidth) * 2 - 1
+      target.y = (e.clientY / window.innerHeight) * 2 - 1
+    }
+    const onTiltMove = (e) => {
+      if (!tiltActive || !card) return
+      const r = card.getBoundingClientRect()
+      const cx = e.clientX - (r.left + r.width / 2)
+      const cy = e.clientY - (r.top + r.height / 2)
+      card.style.setProperty('--parx', (cx / (r.width / 2)).toFixed(4))
+      card.style.setProperty('--pary', (cy / (r.height / 2)).toFixed(4))
+      target.x = (e.clientX / window.innerWidth) * 2 - 1
+      target.y = (e.clientY / window.innerHeight) * 2 - 1
+    }
+    const onTiltUp = () => {
+      if (!tiltActive || !card) return
+      tiltActive = false
+      card.classList.remove('is-parallax')
+      card.style.setProperty('--parx', '0')
+      card.style.setProperty('--pary', '0')
+      // Reset card tilt to center
+      target.x = 0
+      target.y = 0
+    }
+
+    if (card) {
+      card.addEventListener('pointerdown', onTiltDown)
+      window.addEventListener('pointermove', onTiltMove)
+      window.addEventListener('pointerup', onTiltUp)
+      window.addEventListener('pointercancel', onTiltUp)
+    }
+
     if (fine && !reduce) {
       window.addEventListener('pointermove', onMove, { passive: true })
       const onGlowMove = (e) => setGlow(card, e.clientX, e.clientY, true)
@@ -243,7 +288,11 @@ export default function Hero() {
           card.removeEventListener('pointerenter', onGlowMove)
           card.removeEventListener('pointermove', onGlowMove)
           card.removeEventListener('pointerleave', onGlowLeave)
+          card.removeEventListener('pointerdown', onTiltDown)
         }
+        window.removeEventListener('pointermove', onTiltMove)
+        window.removeEventListener('pointerup', onTiltUp)
+        window.removeEventListener('pointercancel', onTiltUp)
         cancelAnimationFrame(raf)
       }
     }
@@ -253,6 +302,12 @@ export default function Hero() {
       window.removeEventListener('message', onSylva)
       window.removeEventListener('yw-persona-sheen', runSheen)
       window.removeEventListener('pointermove', onMove)
+      if (card) {
+        card.removeEventListener('pointerdown', onTiltDown)
+      }
+      window.removeEventListener('pointermove', onTiltMove)
+      window.removeEventListener('pointerup', onTiltUp)
+      window.removeEventListener('pointercancel', onTiltUp)
       cancelAnimationFrame(raf)
     }
   }, [])
