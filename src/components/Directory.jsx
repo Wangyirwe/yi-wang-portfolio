@@ -13,6 +13,7 @@ export default function Directory() {
   const indexRef = useRef(0)
   const featured = allFeatured()
   const work = featured[i]
+  const href = `/work/${work.slug}`
   indexRef.current = i
 
   useEffect(() => {
@@ -122,10 +123,13 @@ export default function Directory() {
         </div>
 
         <article className="directory-stage">
-          <Link className="directory-shot" to={`/work/${work.slug}`}>
+          <Link className="directory-shot" to={href}>
             {work.cover ? (
               <img src={work.cover} alt={pick(work.title)} />
             ) : null}
+          </Link>
+          <Link className="directory-more" to={href}>
+            {t('directoryMore')}
           </Link>
         </article>
       </div>

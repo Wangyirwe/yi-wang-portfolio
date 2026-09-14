@@ -8,6 +8,10 @@ export default defineConfig({
     dedupe: ['three'],
   },
   server: {
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
+    allowedHosts: true,
     watch: {
       ignored: ['**/public/video/**', '**/public/fonts/**'],
     },

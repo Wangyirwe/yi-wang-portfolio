@@ -136,6 +136,7 @@ export default function Featured() {
                         <div className="series-card-meta">
                           <p>{pick(work.category)}</p>
                           <h2>{name}</h2>
+                          <span className="text-link">{t('view')} →</span>
                         </div>
                         {work.year ? <span className="series-pill">{work.year}</span> : null}
                       </div>
