@@ -13,7 +13,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: true,
     watch: {
-      ignored: ['**/public/video/**', '**/public/fonts/**'],
+      ignored: ['**/public/fonts/**'],
     },
   },
 })
